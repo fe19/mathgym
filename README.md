@@ -5,11 +5,19 @@ A simple, responsive web app for practicing math exercises.
 ## Features
 
 - **Categories**: Addition, Multiplication, Division, or Mixed
-- **Difficulty levels**: Easy, Medium, Hard
+- **Difficulty levels**: Easy, Medium, Hard, Extra Hard
 - **10 questions per run** with 4 multiple-choice answers
 - **Timer** tracks how long each run takes
 - **Leaderboard** with scores stored locally (localStorage)
 - **Responsive design** — works on desktop and mobile
+
+## Project structure
+
+```
+index.html   — markup
+style.css    — styles
+app.js       — logic
+```
 
 ## Usage
 
