@@ -239,6 +239,7 @@
       <button data-val="easy" class="selected">Easy</button>
       <button data-val="medium">Medium</button>
       <button data-val="hard">Hard</button>
+      <button data-val="extra-hard">Extra</button>
     </div>
   </div>
 
@@ -317,7 +318,8 @@ document.querySelectorAll('.btn-group').forEach(group => {
 const RANGES = {
   easy:   { add: [1, 10],  mul: [1, 10],  divMax: 10  },
   medium: { add: [10, 100], mul: [2, 15],  divMax: 100 },
-  hard:   { add: [50, 500], mul: [10, 30], divMax: 200 },
+  hard:         { add: [50, 500],  mul: [10, 30],  divMax: 200  },
+  'extra-hard': { add: [100, 2000], mul: [20, 100], divMax: 1000 },
 };
 
 function rand(min, max) {
@@ -518,7 +520,7 @@ function renderLeaderboard() {
 }
 
 /* ── Helpers ── */
-function capitalize(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
+function capitalize(s) { return s.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join('-'); }
 </script>
 </body>
 </html>
