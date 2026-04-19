@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MathGym</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: #f0f4f8;
+    color: #2d3748;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  h1 {
+    font-size: 2rem;
+    margin: 1.5rem 0 0.5rem;
+    letter-spacing: -0.5px;
+  }
+
+  /* ── Screens ── */
+  .screen { display: none; width: 100%; max-width: 480px; padding: 1rem; }
+  .screen.active { display: flex; flex-direction: column; align-items: center; }
+
+  /* ── Menu ── */
+  .menu-section { width: 100%; margin-bottom: 1.2rem; }
+  .menu-section h2 { font-size: 1rem; text-transform: uppercase; letter-spacing: 1px; color: #718096; margin-bottom: 0.5rem; }
+
+  .btn-group { display: flex; gap: 0.5rem; width: 100%; }
+  .btn-group button {
+    flex: 1;
+    padding: 0.75rem 0.5rem;
+    border: 2px solid #cbd5e0;
+    border-radius: 10px;
+    background: #fff;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .btn-group button:hover { border-color: #4299e1; color: #4299e1; }
+  .btn-group button.selected { background: #4299e1; color: #fff; border-color: #4299e1; }
+
+  .start-btn {
+    margin-top: 1rem;
+    width: 100%;
+    padding: 1rem;
+    border: none;
+    border-radius: 12px;
+    background: #48bb78;
+    color: #fff;
+    font-size: 1.2rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .start-btn:hover { background: #38a169; }
+
+  .leaderboard-btn {
+    margin-top: 0.5rem;
+    width: 100%;
+    padding: 0.75rem;
+    border: 2px solid #cbd5e0;
+    border-radius: 12px;
+    background: #fff;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .leaderboard-btn:hover { border-color: #4299e1; color: #4299e1; }
+
+  /* ── Quiz ── */
+  .progress-bar {
+    width: 100%;
+    height: 6px;
+    background: #e2e8f0;
+    border-radius: 3px;
+    margin: 1rem 0;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    background: #4299e1;
+    border-radius: 3px;
+    transition: width 0.3s;
+  }
+
+  .quiz-header {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    font-size: 0.9rem;
+    color: #718096;
+    margin-bottom: 0.5rem;
+  }
+
+  .question {
+    font-size: 2rem;
+    font-weight: 700;
+    margin: 1.5rem 0 2rem;
+    text-align: center;
+  }
+
+  .answers {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
+    width: 100%;
+  }
+
+  .answer-btn {
+    padding: 1.2rem;
+    border: 2px solid #e2e8f0;
+    border-radius: 12px;
+    background: #fff;
+    font-size: 1.3rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .answer-btn:hover { border-color: #4299e1; background: #ebf8ff; }
+  .answer-btn.correct { background: #c6f6d5; border-color: #48bb78; }
+  .answer-btn.wrong { background: #fed7d7; border-color: #fc8181; }
+  .answer-btn.disabled { pointer-events: none; }
+
+  /* ── Results ── */
+  .score-circle {
+    width: 140px;
+    height: 140px;
+    border-radius: 50%;
+    background: #ebf8ff;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    margin: 1.5rem 0;
+    border: 4px solid #4299e1;
+  }
+  .score-circle .score-num { font-size: 3rem; font-weight: 800; color: #2b6cb0; line-height: 1; }
+  .score-circle .score-label { font-size: 0.8rem; color: #718096; }
+
+  .result-details { font-size: 0.95rem; color: #718096; margin-bottom: 1.5rem; }
+
+  /* ── Leaderboard ── */
+  .leaderboard-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1rem 0;
+  }
+  .leaderboard-table th {
+    text-align: left;
+    padding: 0.5rem;
+    border-bottom: 2px solid #e2e8f0;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    color: #718096;
+  }
+  .leaderboard-table td {
+    padding: 0.5rem;
+    border-bottom: 1px solid #f0f4f8;
+    font-size: 0.9rem;
+  }
+  .leaderboard-table tr.highlight td { background: #ebf8ff; font-weight: 600; }
+
+  .filter-row {
+    display: flex;
+    gap: 0.5rem;
+    width: 100%;
+    margin-bottom: 0.5rem;
+    flex-wrap: wrap;
+  }
+  .filter-btn {
+    padding: 0.4rem 0.8rem;
+    border: 1.5px solid #cbd5e0;
+    border-radius: 8px;
+    background: #fff;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .filter-btn:hover { border-color: #4299e1; }
+  .filter-btn.selected { background: #4299e1; color: #fff; border-color: #4299e1; }
+
+  .back-btn {
+    margin-top: 1rem;
+    padding: 0.75rem 2rem;
+    border: 2px solid #cbd5e0;
+    border-radius: 10px;
+    background: #fff;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .back-btn:hover { border-color: #4299e1; color: #4299e1; }
+
+  .clear-btn {
+    margin-top: 0.5rem;
+    padding: 0.5rem 1.5rem;
+    border: none;
+    border-radius: 8px;
+    background: #fed7d7;
+    color: #c53030;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .clear-btn:hover { background: #fc8181; color: #fff; }
+
+  .empty-msg { color: #a0aec0; margin: 2rem 0; font-style: italic; }
+</style>
+</head>
+<body>
+
+<!-- ════ Menu Screen ════ -->
+<div id="menu" class="screen active">
+  <h1>MathGym</h1>
+
+  <div class="menu-section">
+    <h2>Category</h2>
+    <div class="btn-group" id="category-btns">
+      <button data-val="addition" class="selected">+</button>
+      <button data-val="multiplication">×</button>
+      <button data-val="division">÷</button>
+      <button data-val="mixed">Mix</button>
+    </div>
+  </div>
+
+  <div class="menu-section">
+    <h2>Difficulty</h2>
+    <div class="btn-group" id="difficulty-btns">
+      <button data-val="easy" class="selected">Easy</button>
+      <button data-val="medium">Medium</button>
+      <button data-val="hard">Hard</button>
+    </div>
+  </div>
+
+  <button class="start-btn" onclick="startQuiz()">Start</button>
+  <button class="leaderboard-btn" onclick="showScreen('leaderboard')">Leaderboard</button>
+</div>
+
+<!-- ════ Quiz Screen ════ -->
+<div id="quiz" class="screen">
+  <div class="quiz-header">
+    <span id="quiz-counter">1 / 10</span>
+    <span id="quiz-timer">0:00</span>
+  </div>
+  <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+  <div class="question" id="question-text">3 + 5 = ?</div>
+  <div class="answers" id="answers"></div>
+</div>
+
+<!-- ════ Result Screen ════ -->
+<div id="result" class="screen">
+  <h1>Done!</h1>
+  <div class="score-circle">
+    <span class="score-num" id="final-score">0</span>
+    <span class="score-label">/ 10</span>
+  </div>
+  <div class="result-details" id="result-details"></div>
+  <button class="start-btn" onclick="startQuiz()">Play Again</button>
+  <button class="leaderboard-btn" onclick="showScreen('leaderboard')">Leaderboard</button>
+  <button class="back-btn" onclick="showScreen('menu')">Menu</button>
+</div>
+
+<!-- ════ Leaderboard Screen ════ -->
+<div id="leaderboard" class="screen">
+  <h1>Leaderboard</h1>
+  <div class="filter-row" id="lb-filters"></div>
+  <table class="leaderboard-table" id="lb-table">
+    <thead><tr><th>#</th><th>Score</th><th>Category</th><th>Diff.</th><th>Time</th><th>Date</th></tr></thead>
+    <tbody id="lb-body"></tbody>
+  </table>
+  <p class="empty-msg" id="lb-empty" style="display:none">No scores yet.</p>
+  <button class="back-btn" onclick="showScreen('menu')">Back</button>
+  <button class="clear-btn" onclick="clearLeaderboard()">Clear All</button>
+</div>
+
+<script>
+/* ── State ── */
+let category = 'addition';
+let difficulty = 'easy';
+let questions = [];
+let current = 0;
+let score = 0;
+let timerStart = 0;
+let timerInterval = null;
+let lastEntryId = null;
+
+/* ── Screen navigation ── */
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  if (id === 'leaderboard') renderLeaderboard();
+}
+
+/* ── Button groups ── */
+document.querySelectorAll('.btn-group').forEach(group => {
+  group.addEventListener('click', e => {
+    const btn = e.target.closest('button');
+    if (!btn) return;
+    group.querySelectorAll('button').forEach(b => b.classList.remove('selected'));
+    btn.classList.add('selected');
+    if (group.id === 'category-btns') category = btn.dataset.val;
+    if (group.id === 'difficulty-btns') difficulty = btn.dataset.val;
+  });
+});
+
+/* ── Question generation ── */
+const RANGES = {
+  easy:   { add: [1, 10],  mul: [1, 10],  divMax: 10  },
+  medium: { add: [10, 100], mul: [2, 15],  divMax: 100 },
+  hard:   { add: [50, 500], mul: [10, 30], divMax: 200 },
+};
+
+function rand(min, max) {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+function generateQuestion(cat, diff) {
+  const r = RANGES[diff];
+  if (cat === 'mixed') cat = ['addition', 'multiplication', 'division'][rand(0, 2)];
+
+  let a, b, answer, text;
+
+  if (cat === 'addition') {
+    a = rand(r.add[0], r.add[1]);
+    b = rand(r.add[0], r.add[1]);
+    answer = a + b;
+    text = `${a} + ${b}`;
+  } else if (cat === 'multiplication') {
+    a = rand(r.mul[0], r.mul[1]);
+    b = rand(r.mul[0], r.mul[1]);
+    answer = a * b;
+    text = `${a} × ${b}`;
+  } else {
+    // division: pick b and answer first, so result is always an integer
+    b = rand(2, r.mul[1]);
+    answer = rand(r.add[0], Math.floor(r.divMax / b));
+    a = answer * b;
+    text = `${a} ÷ ${b}`;
+  }
+
+  return { text: text + ' = ?', answer, choices: makeChoices(answer, cat, diff) };
+}
+
+function makeChoices(correct, cat, diff) {
+  const set = new Set([correct]);
+  const spread = Math.max(5, Math.ceil(correct * 0.3));
+  while (set.size < 4) {
+    const offset = rand(1, spread) * (Math.random() < 0.5 ? -1 : 1);
+    const fake = correct + offset;
+    if (fake > 0) set.add(fake);
+  }
+  return shuffle([...set]);
+}
+
+function shuffle(arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = rand(0, i);
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+/* ── Quiz flow ── */
+function startQuiz() {
+  questions = [];
+  for (let i = 0; i < 10; i++) questions.push(generateQuestion(category, difficulty));
+  current = 0;
+  score = 0;
+  lastEntryId = null;
+  showScreen('quiz');
+  startTimer();
+  renderQuestion();
+}
+
+function renderQuestion() {
+  const q = questions[current];
+  document.getElementById('quiz-counter').textContent = `${current + 1} / 10`;
+  document.getElementById('progress-fill').style.width = `${(current / 10) * 100}%`;
+  document.getElementById('question-text').textContent = q.text;
+
+  const container = document.getElementById('answers');
+  container.innerHTML = '';
+  q.choices.forEach(val => {
+    const btn = document.createElement('button');
+    btn.className = 'answer-btn';
+    btn.textContent = val;
+    btn.onclick = () => handleAnswer(btn, val, q.answer);
+    container.appendChild(btn);
+  });
+}
+
+function handleAnswer(btn, chosen, correct) {
+  const buttons = document.querySelectorAll('.answer-btn');
+  buttons.forEach(b => {
+    b.classList.add('disabled');
+    if (parseInt(b.textContent) === correct) b.classList.add('correct');
+  });
+
+  if (chosen === correct) {
+    score++;
+  } else {
+    btn.classList.add('wrong');
+  }
+
+  setTimeout(() => {
+    current++;
+    if (current < 10) {
+      renderQuestion();
+    } else {
+      endQuiz();
+    }
+  }, 600);
+}
+
+/* ── Timer ── */
+function startTimer() {
+  timerStart = Date.now();
+  clearInterval(timerInterval);
+  timerInterval = setInterval(updateTimer, 1000);
+  updateTimer();
+}
+
+function updateTimer() {
+  const elapsed = Math.floor((Date.now() - timerStart) / 1000);
+  const min = Math.floor(elapsed / 60);
+  const sec = String(elapsed % 60).padStart(2, '0');
+  document.getElementById('quiz-timer').textContent = `${min}:${sec}`;
+}
+
+function getElapsed() {
+  return Math.floor((Date.now() - timerStart) / 1000);
+}
+
+/* ── End quiz ── */
+function endQuiz() {
+  clearInterval(timerInterval);
+  const elapsed = getElapsed();
+  const min = Math.floor(elapsed / 60);
+  const sec = String(elapsed % 60).padStart(2, '0');
+
+  document.getElementById('final-score').textContent = score;
+  document.getElementById('result-details').textContent =
+    `${capitalize(category)} · ${capitalize(difficulty)} · ${min}:${sec}`;
+
+  lastEntryId = saveScore(score, category, difficulty, elapsed);
+  showScreen('result');
+}
+
+/* ── Leaderboard ── */
+function getScores() {
+  return JSON.parse(localStorage.getItem('mathgym_scores') || '[]');
+}
+
+function saveScore(score, cat, diff, time) {
+  const scores = getScores();
+  const id = Date.now();
+  scores.push({ id, score, category: cat, difficulty: diff, time, date: new Date().toLocaleDateString() });
+  localStorage.setItem('mathgym_scores', JSON.stringify(scores));
+  return id;
+}
+
+function clearLeaderboard() {
+  localStorage.removeItem('mathgym_scores');
+  renderLeaderboard();
+}
+
+let lbFilter = 'all';
+
+function renderLeaderboard() {
+  const scores = getScores();
+  const filters = document.getElementById('lb-filters');
+  const cats = ['all', 'addition', 'multiplication', 'division', 'mixed'];
+  filters.innerHTML = '';
+  cats.forEach(c => {
+    const btn = document.createElement('button');
+    btn.className = 'filter-btn' + (lbFilter === c ? ' selected' : '');
+    btn.textContent = capitalize(c);
+    btn.onclick = () => { lbFilter = c; renderLeaderboard(); };
+    filters.appendChild(btn);
+  });
+
+  let filtered = lbFilter === 'all' ? scores : scores.filter(s => s.category === lbFilter);
+  filtered.sort((a, b) => b.score - a.score || a.time - b.time);
+
+  const tbody = document.getElementById('lb-body');
+  const empty = document.getElementById('lb-empty');
+
+  if (filtered.length === 0) {
+    tbody.innerHTML = '';
+    empty.style.display = 'block';
+    return;
+  }
+  empty.style.display = 'none';
+
+  tbody.innerHTML = filtered.map((s, i) => {
+    const min = Math.floor(s.time / 60);
+    const sec = String(s.time % 60).padStart(2, '0');
+    const highlight = s.id === lastEntryId ? ' class="highlight"' : '';
+    return `<tr${highlight}>
+      <td>${i + 1}</td>
+      <td>${s.score}/10</td>
+      <td>${capitalize(s.category)}</td>
+      <td>${capitalize(s.difficulty)}</td>
+      <td>${min}:${sec}</td>
+      <td>${s.date}</td>
+    </tr>`;
+  }).join('');
+}
+
+/* ── Helpers ── */
+function capitalize(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
+</script>
+</body>
+</html>
